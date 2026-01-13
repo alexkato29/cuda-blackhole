@@ -13,26 +13,20 @@ TARGET = blackhole
 
 # Source files
 CU_SOURCES = main.cu
-C_SOURCES = stb_image.c
 
 # Object files
 CU_OBJECTS = $(CU_SOURCES:.cu=.o)
-C_OBJECTS = $(C_SOURCES:.c=.o)
 
 # Default target
 all: $(TARGET)
 
 # Link object files into executable
-$(TARGET): $(CU_OBJECTS) $(C_OBJECTS)
+$(TARGET): $(CU_OBJECTS)
 	$(NVCC) $(NVCC_FLAGS) -o $@ $^
 
 # Compile CUDA source files
 %.o: %.cu
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@
-
-# Compile C source files
-%.o: %.c
-	$(CC) $(CFLAGS) $< -o $@
 
 # Run the program (requires input/output image paths)
 run: $(TARGET)
@@ -41,7 +35,7 @@ run: $(TARGET)
 
 # Clean build artifacts
 clean:
-	rm -f $(TARGET) $(CU_OBJECTS) $(C_OBJECTS)
+	rm -f $(TARGET) $(CU_OBJECTS)
 
 # Download stb_image.h if not present
 setup:
@@ -54,3 +48,4 @@ setup:
 	fi
 
 .PHONY: all run clean setup
+

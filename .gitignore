@@ -1,6 +1,8 @@
 # User Added
 .DS_Store
 stb_image.h
+*.o
+blackhole
 
 # CUDA Template
 *.i
