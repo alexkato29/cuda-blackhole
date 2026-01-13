@@ -16,7 +16,7 @@ CFLAGS = -O2 -c
 TARGET = blackhole
 
 # Source files
-CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/raytrace.cu
+CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/blackhole.cu
 
 # Object files
 CU_OBJECTS = $(patsubst $(SRC_DIR)/%.cu,$(BUILD_DIR)/%.o,$(CU_SOURCES))

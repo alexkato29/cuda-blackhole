@@ -7,7 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "raytrace.h"
+#include "blackhole.h"
 
 
 void uchar_to_float(const unsigned char *input, float *output, size_t size) {
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
 	dim3 threads(16, 16);
 	dim3 blocks((width + threads.x - 1) / threads.x, (height + threads.y - 1) / threads.y);
-	raytrace<<<blocks, threads>>>(d_input, d_output, width, height, channels);
+	blackhole<<<blocks, threads>>>(d_input, d_output, width, height, channels);
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(h_output_float, d_output, float_bytes, cudaMemcpyDeviceToHost);
