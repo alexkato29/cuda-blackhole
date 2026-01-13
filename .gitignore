@@ -1,3 +1,8 @@
+# User Added
+.DS_Store
+stb_image.h
+
+# CUDA Template
 *.i
 *.ii
 *.gpu
