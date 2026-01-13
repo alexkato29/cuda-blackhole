@@ -1,0 +1,2 @@
+# cuda-blackhole
+Engulf anything.
