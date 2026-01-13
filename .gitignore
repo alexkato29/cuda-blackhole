@@ -1,5 +1,6 @@
 # User Added
 .DS_Store
+images/
 stb_image.h
 *.o
 blackhole
