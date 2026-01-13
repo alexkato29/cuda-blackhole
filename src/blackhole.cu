@@ -1,4 +1,4 @@
-#include "raytrace.h"
+#include "blackhole.h"
 
 __global__ void blackhole(float *input, float *output, int width, int height, int channels) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
