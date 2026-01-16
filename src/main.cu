@@ -28,52 +28,72 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Invalid Usage. Example: %s <input_image> <output_image>\n", argv[0]);
 		return EXIT_FAILURE;
 	}
-
+	// Todo: FOV, output resolution, and blackhole params are input parameters
 	const char *input_path = argv[1];
 	const char *output_path = argv[2];
 
+	const int output_width = 1920;
+	const int output_height = 1080;
+	const float fov_degrees = 60.0f;
+
+	const float schwarzchild_radius = 1.0f;
+
 	printf("Loading image from: %s\n", input_path);
 
-	int width, height, channels;
-	unsigned char *image = stbi_load(input_path, &width, &height, &channels, 0);
+	// Channels is technically dynamically declared, but we can sorta always assume it's 3
+	int input_width, input_height, channels;
+	unsigned char *image = stbi_load(input_path, &input_width, &input_height, &channels, 0);
 
 	if (!image) {
 		fprintf(stderr, "Error: Failed to load image '%s'\n", input_path);
 		return EXIT_FAILURE;
 	}
 
-	printf("Image loaded! %dx%d with %d channels\n", width, height, channels);
+	printf("Image loaded! %dx%d with %d channels\n", input_width, input_height, channels);
 
-	size_t img_size = width * height * channels;
-	size_t uchar_bytes = img_size * sizeof(unsigned char);
-	size_t float_bytes = img_size * sizeof(float);
+	size_t input_img_size = input_width * input_height * channels;
+	size_t input_float_bytes = input_img_size * sizeof(float);
+
+	size_t output_render_size = output_width * output_height * channels;
+	size_t output_uchar_bytes = output_render_size * sizeof(unsigned char);
+	size_t output_float_bytes = output_render_size * sizeof(float);
 
 	float *h_input_float = nullptr;
-	cudaMallocHost(&h_input_float, float_bytes);
-	uchar_to_float(image, h_input_float, img_size);
+	cudaMallocHost(&h_input_float, input_float_bytes);
+	uchar_to_float(image, h_input_float, input_img_size);
 	stbi_image_free(image);
 
 	float *h_output_float = nullptr;
-	cudaMallocHost(&h_output_float, float_bytes);
+	cudaMallocHost(&h_output_float, output_float_bytes);
 
 	float *d_input = nullptr, *d_output = nullptr;
-	cudaMalloc(&d_input, float_bytes);
-	cudaMalloc(&d_output, float_bytes);
+	cudaMalloc(&d_input, input_float_bytes);
+	cudaMalloc(&d_output, output_float_bytes);
 
-	cudaMemcpy(d_input, h_input_float, float_bytes, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_input, h_input_float, input_float_bytes, cudaMemcpyHostToDevice);
 
-	raytrace_blackhole(d_input, d_output, width, height, channels);	
+	raytrace_blackhole(
+		d_input, 
+		input_width,
+		input_height,
+		d_output, 
+		output_width,
+		output_height,
+		channels,
+		fov_degrees,
+		schwarzchild_radius
+	);	
 
-	cudaMemcpy(h_output_float, d_output, float_bytes, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_output_float, d_output, output_float_bytes, cudaMemcpyDeviceToHost);
 
 	cudaFree(d_input);
 	cudaFree(d_output);
 
-	unsigned char *h_output_uchar = (unsigned char *)malloc(uchar_bytes);
-	float_to_uchar(h_output_float, h_output_uchar, img_size);
+	unsigned char *h_output_uchar = (unsigned char *)malloc(output_uchar_bytes);
+	float_to_uchar(h_output_float, h_output_uchar, output_render_size);
 
-	printf("Writing image to: %s\n", output_path);
-	if (!stbi_write_png(output_path, width, height, channels, h_output_uchar, width * channels)) {
+	printf("Writing rendered image to: %s\n", output_path);
+	if (!stbi_write_png(output_path, output_width, output_height, channels, h_output_uchar, output_width * channels)) {
 		fprintf(stderr, "Error: Failed to write image '%s'\n", output_path);
 		free(h_output_uchar);
 		cudaFreeHost(h_input_float);
@@ -81,7 +101,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	}
 
-	printf("Successfully wrote (engulfed) image!\n");
+	printf("Successfully rendered (engulfed) image!\n");
 
 	free(h_output_uchar);
 	cudaFreeHost(h_input_float);

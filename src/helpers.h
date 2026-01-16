@@ -33,12 +33,15 @@ __host__ __device__ inline float3 cross(float3 a, float3 b) {
     );
 }
 
-__host__ __device__ inline float length(float3 v) {
+__device__ inline float length(float3 v) {
     return sqrtf(dot(v, v));
+}
+
+__device__ inline float length_squared(float3 v) {
+    return dot(v, v);
 }
 
 __host__ __device__ inline float3 normalize(float3 v) {
     // This is technically less precise than 1.0f/magnitude, so keep that in mind
     return v * rsqrtf(dot(v, v));
 }
-
