@@ -23,7 +23,6 @@ void float_to_uchar(const float *input, unsigned char *output, size_t size) {
 	}
 }
 
-
 int main(int argc, char **argv) {
 	if (argc != 3) {
 		fprintf(stderr, "Invalid Usage. Example: %s <input_image> <output_image>\n", argv[0]);
@@ -63,10 +62,7 @@ int main(int argc, char **argv) {
 
 	cudaMemcpy(d_input, h_input_float, float_bytes, cudaMemcpyHostToDevice);
 
-	dim3 threads(16, 16);
-	dim3 blocks((width + threads.x - 1) / threads.x, (height + threads.y - 1) / threads.y);
-	blackhole<<<blocks, threads>>>(d_input, d_output, width, height, channels);
-	cudaDeviceSynchronize();
+	raytrace_blackhole(d_input, d_output, width, height, channels);	
 
 	cudaMemcpy(h_output_float, d_output, float_bytes, cudaMemcpyDeviceToHost);
 

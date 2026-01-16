@@ -4,6 +4,7 @@ images/
 build/
 *stb_image*
 blackhole
+temp/
 
 # CUDA Template
 *.i

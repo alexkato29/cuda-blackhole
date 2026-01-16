@@ -1,2 +1,9 @@
 #pragma once
-__global__ void blackhole(float *input, float *output, int width, int height, int channels);
+
+void raytrace_blackhole(
+    float* d_input,
+    float* d_output,
+    int width,
+    int height,
+    int channels
+);
