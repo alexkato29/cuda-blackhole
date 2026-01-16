@@ -39,7 +39,7 @@ __global__ void blackhole(
 
 	for (int n = 0; n < num_iterations; n++) {
 		float old_radius = length(r.position);
-		r.position += r.velocity * step_size;
+		r.position = r.position + r.velocity * step_size;
 		float new_radius = length(r.position);
 
 		if (new_radius < schwarzchild_radius && old_radius >= schwarzchild_radius) {
@@ -74,7 +74,7 @@ void raytrace_blackhole(
 	float3 camera_position = make_float3(0.0f, 1.0f, -20.0f);
 	float3 facing = make_float3(0.0f, 0.0f, 0.0f);
 
-	float3 camera_front = normalize(camera_position - facing);
+	float3 camera_front = normalize(facing - camera_position);
 	float3 camera_left = cross(camera_front, make_float3(0.0f, 1.0f, 0.0f));
 	float3 camera_up = cross(camera_front, camera_left);
 
@@ -105,3 +105,4 @@ void raytrace_blackhole(
 	);
 	cudaDeviceSynchronize();
 }
+

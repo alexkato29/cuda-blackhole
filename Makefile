@@ -6,13 +6,13 @@ BUILD_DIR = build
 NVCC = nvcc
 
 # Compiler flags
-NVCC_FLAGS = -O2 -arch=sm_75 -I$(SRC_DIR)
+NVCC_FLAGS = -O2 -arch=sm_75 -I$(SRC_DIR) -diag-suppress 550
 
 # Target executable
 TARGET = blackhole
 
 # Source files
-CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/blackhole.cu $(SRC_DIR)/helpers.cu
+CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/blackhole.cu
 
 # Object files
 CU_OBJECTS = $(patsubst $(SRC_DIR)/%.cu,$(BUILD_DIR)/%.o,$(CU_SOURCES))
@@ -55,3 +55,4 @@ setup:
 	fi
 
 .PHONY: all clean setup
+
