@@ -1,22 +1,18 @@
-# Claude generated makefile, to be honest...
-
 # Directories
 SRC_DIR = src
 BUILD_DIR = build
 
-# Compiler settings
+# Compiler
 NVCC = nvcc
-CC = gcc
 
 # Compiler flags
 NVCC_FLAGS = -O2 -arch=sm_75 -I$(SRC_DIR)
-CFLAGS = -O2 -c
 
 # Target executable
 TARGET = blackhole
 
 # Source files
-CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/blackhole.cu
+CU_SOURCES = $(SRC_DIR)/main.cu $(SRC_DIR)/blackhole.cu $(SRC_DIR)/helpers.cu
 
 # Object files
 CU_OBJECTS = $(patsubst $(SRC_DIR)/%.cu,$(BUILD_DIR)/%.o,$(CU_SOURCES))
@@ -35,11 +31,6 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cu | $(BUILD_DIR)
 # Create build directory
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
-
-# Run the program (requires input/output image paths)
-run: $(TARGET)
-	@echo "Usage: ./$(TARGET) <input_image> <output_image>"
-	@echo "Example: ./$(TARGET) input.png output.png"
 
 # Clean build artifacts
 clean:
@@ -63,5 +54,4 @@ setup:
 		echo "stb_image_write.h already exists."; \
 	fi
 
-.PHONY: all run clean setup
-
+.PHONY: all clean setup
