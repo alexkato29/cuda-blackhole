@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
 	const char *input_path = argv[1];
 	const char *output_path = argv[2];
 
-	const int output_width = 1920;
-	const int output_height = 1080;
+	const int output_width = 3840;
+	const int output_height = 2160;
 	const float fov_degrees = 60.0f;
 
 	const float schwarzchild_radius = 1.0f;

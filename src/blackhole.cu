@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <cuda_runtime.h>
 #include <math.h>
 #include "helpers.h"
@@ -21,6 +23,7 @@ __global__ void blackhole(
 	float tan_fov,
 	int num_iterations,
 	float step_size,
+	float3 blackhole_position,
 	float schwarzchild_radius
 ) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -29,21 +32,33 @@ __global__ void blackhole(
 
 	if (x >= output_width || y >= output_height) return;
 
+	/*
+	A few notes:
+
+	1. Unscaled screen_x/y go from -0.5 to 0.5. Multiplying the leftmost vector (-0.5 screen_x)
+	by the camera_left (negative X direction) vector will have us look right! Hence the 
+	subtraction to keep orientation as expected.
+
+	2. FOV is actually super interesting. I just expected that high FOV = fisheye, but that's 
+	not the case. For massive tan_fov, ray_direction values will asymptotically hang at near
+	perpendicular angles to the front of the camera. As a result, we should see some tunneling 
+	effect that looks like Hyperspace in Star Wars.
+	*/
 	float screen_x = ((float) x / output_width - 0.5f) * tan_fov;
 	float screen_y = ((float) y / output_height - 0.5f) * tan_fov * ((float) output_height / output_width);
-	float3 view_direction = camera_front + camera_left * screen_x + camera_up * screen_y;
-	view_direction = normalize(view_direction);
+	float3 ray_direction = camera_front - camera_left * screen_x - camera_up * screen_y;
+	ray_direction = normalize(ray_direction);
 
 	RayState ray;
 	ray.position = camera_position;
-	ray.velocity = view_direction;
+	ray.velocity = ray_direction;
 
 	bool hit_event_horizon = false;
 
 	for (int n = 0; n < num_iterations; n++) {
-		float old_radius = length(ray.position);
+		float old_radius = length(ray.position - blackhole_position);
 		ray.position = ray.position + ray.velocity * step_size;
-		float new_radius = length(ray.position);
+		float new_radius = length(ray.position - blackhole_position);
 
 		if (new_radius < schwarzchild_radius && old_radius >= schwarzchild_radius) {
 			hit_event_horizon = true;
@@ -59,16 +74,9 @@ __global__ void blackhole(
 	} else {
 		float3 dir = normalize(ray.velocity);
 
-		// Convert to polar coordinates. We don't care about radius, we assume infinte distance.
-		// Just want to know what the ray would hit if it went forever.
-		float phi = atan2f(dir.y, dir.x);
-		float theta = acosf(dir.z);
-
-		float u = (phi + M_PI) / (2.0f * M_PI);
-		float v = theta / M_PI;
-
-		int px = (int)(u * input_width) % input_width;
-		int py = (int)(v * input_height) % input_height;
+		float2 uv = uv_mapping(dir);
+		int px = (int)(uv.x * input_width);
+		int py = (int)(uv.y * input_height);
 
 		int input_idx = (py * input_width + px) * channels;
 		color.x = input[input_idx + 0];
@@ -92,15 +100,22 @@ void raytrace_blackhole(
 	float fov_degrees,
 	float schwarzchild_radius
 ) {
-	float3 camera_position = make_float3(0.0f, 1.0f, -45.0f);
-	float3 facing = make_float3(0.0f, 0.0f, 0.0f);
+	// Make sure the camera is not inside of the blackhole
+	float3 camera_position = make_float3(0.0f, 0.0f, 0.0f);
+	float3 blackhole_position = make_float3(0.0f, 20.0f, 10.0f);
 
-	float3 camera_front = normalize(facing - camera_position);
-	float3 camera_left = normalize(cross(camera_front, make_float3(0.0f, 1.0f, 0.0f)));
+	float3 camera_front = normalize(blackhole_position - camera_position);
+	float3 camera_left = normalize(cross(make_float3(0.0f, 0.0f, 1.0f), camera_front));
 	float3 camera_up = normalize(cross(camera_front, camera_left));
 
+	// Note: tan_fov can be negative depending on FoV. Abs value prevents flipping the image.
 	float fov_radians = fov_degrees * M_PI / 180.0f;
-	float tan_fov = 2.0f * tanf(fov_radians / 2.0f);
+	float tan_fov = fabsf(2.0f * tanf(fov_radians / 2.0f));
+
+	printf("\nFront: %f, %f, %f\n", camera_front.x, camera_front.y, camera_front.z);
+	printf("Left: %f, %f, %f\n", camera_left.x, camera_left.y, camera_left.z);
+	printf("Up: %f, %f, %f\n", camera_up.x, camera_up.y, camera_up.z);
+	printf("Tan FoV: %f\n", tan_fov);
 
 	// For now, these are just arbitrary
 	int num_iterations = 100000;
@@ -124,6 +139,7 @@ void raytrace_blackhole(
 		tan_fov,
 		num_iterations,
 		step_size,
+		blackhole_position,
 		schwarzchild_radius
 	);
 	cudaDeviceSynchronize();
