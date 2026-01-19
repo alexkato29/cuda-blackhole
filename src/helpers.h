@@ -66,6 +66,46 @@ __device__ inline float2 uv_mapping(float3 velocity) {
     return make_float2(u, v);
 }
 
+__device__ inline float3 compute_acceleration(float3 position, float h2, float3 blackhole_position) {
+    float3 relative_position = position - blackhole_position;
+    float r2 = length_squared(relative_position);
+    float r5 = r2 * r2 * sqrtf(r2);
+
+    if (r5 < 1e-10f) return make_float3(0, 0, 0);
+
+    return relative_position * (-1.5f * h2 / r5);
+}
+
+__device__ inline RayState compute_derivative(RayState state, float h2, float3 blackhole_position) {
+    RayState derivative;
+    derivative.position = state.velocity;
+    derivative.velocity = compute_acceleration(state.position, h2, blackhole_position);
+    return derivative;
+}
+
+__device__ inline RayState rk4_step(RayState state, float h2, float step_size, float3 blackhole_position) {
+    RayState k1 = compute_derivative(state, h2, blackhole_position);
+
+    RayState temp = state;
+    temp.position = state.position + k1.position * (0.5f * step_size);
+    temp.velocity = state.velocity + k1.velocity * (0.5f * step_size);
+    RayState k2 = compute_derivative(temp, h2, blackhole_position);
+
+    temp.position = state.position + k2.position * (0.5f * step_size);
+    temp.velocity = state.velocity + k2.velocity * (0.5f * step_size);
+    RayState k3 = compute_derivative(temp, h2, blackhole_position);
+
+    temp.position = state.position + k3.position * step_size;
+    temp.velocity = state.velocity + k3.velocity * step_size;
+    RayState k4 = compute_derivative(temp, h2, blackhole_position);
+
+    RayState next_state;
+    next_state.position = state.position + (k1.position + k2.position * 2.0f + k3.position * 2.0f + k4.position) * (step_size / 6.0f);
+    next_state.velocity = state.velocity + (k1.velocity + k2.velocity * 2.0f + k3.velocity * 2.0f + k4.velocity) * (step_size / 6.0f);
+
+    return next_state;
+}
+
 struct Config {
     int output_width;
     int output_height;

@@ -55,9 +55,15 @@ __global__ void blackhole(
 
 	bool hit_event_horizon = false;
 
+	float3 angular_momentum = cross(ray.position - blackhole_position, ray.velocity);
+	float h2 = length_squared(angular_momentum);
+
 	for (int n = 0; n < num_iterations; n++) {
 		float old_radius = length(ray.position - blackhole_position);
-		ray.position = ray.position + ray.velocity * step_size;
+		// For now we simulate the light rays rather than using the field equations.
+		// It's a simplified and (much faster) approach. But ultimately, if I have time
+		// to properly learn GR I think it'd be great to actually use Einstein's Field Equations.
+		ray =  rk4_step(ray, h2, step_size, blackhole_position);
 		float new_radius = length(ray.position - blackhole_position);
 
 		if (new_radius < schwarzchild_radius && old_radius >= schwarzchild_radius) {
