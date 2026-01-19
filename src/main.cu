@@ -7,6 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include "helpers.h"
 #include "blackhole.h"
 
 
@@ -24,19 +25,27 @@ void float_to_uchar(const float *input, unsigned char *output, size_t size) {
 }
 
 int main(int argc, char **argv) {
-	if (argc != 3) {
-		fprintf(stderr, "Invalid Usage. Example: %s <input_image> <output_image>\n", argv[0]);
+	if (argc < 2 || argc > 3) {
+		fprintf(stderr, "Usage: %s <config_file>\n", argv[0]);
 		return EXIT_FAILURE;
 	}
-	// Todo: FOV, output resolution, and blackhole params are input parameters
-	const char *input_path = argv[1];
-	const char *output_path = argv[2];
 
-	const int output_width = 3840;
-	const int output_height = 2160;
-	const float fov_degrees = 60.0f;
+	const char *config_path = argv[1];
 
-	const float schwarzchild_radius = 1.0f;
+	Config config;
+	if (!load_config(config_path, &config)) {
+		fprintf(stderr, "Warning: could not load config from '%s', using defaults from helpers.h...", config_path);
+	}
+
+	const int output_width = config.output_width;
+	const int output_height = config.output_height;
+	const float fov_degrees = config.fov_degrees;
+	const float schwarzchild_radius = config.schwarzchild_radius;
+	const float3 blackhole_position = make_float3(config.blackhole_x, config.blackhole_y, config.blackhole_z);
+	const int num_iterations = config.num_iterations;
+	const float step_size = config.step_size;
+	const char* input_path = config.input_path;
+	const char* output_path = config.output_path;
 
 	printf("Loading image from: %s\n", input_path);
 
@@ -73,15 +82,18 @@ int main(int argc, char **argv) {
 	cudaMemcpy(d_input, h_input_float, input_float_bytes, cudaMemcpyHostToDevice);
 
 	raytrace_blackhole(
-		d_input, 
+		d_input,
 		input_width,
 		input_height,
-		d_output, 
+		d_output,
 		output_width,
 		output_height,
 		channels,
 		fov_degrees,
-		schwarzchild_radius
+		schwarzchild_radius,
+		blackhole_position,
+		num_iterations,
+		step_size
 	);	
 
 	cudaMemcpy(h_output_float, d_output, output_float_bytes, cudaMemcpyDeviceToHost);
@@ -106,6 +118,9 @@ int main(int argc, char **argv) {
 	free(h_output_uchar);
 	cudaFreeHost(h_input_float);
 	cudaFreeHost(h_output_float);
+
+	free(config.input_path);
+	free(config.output_path);
 
 	return EXIT_SUCCESS;
 }

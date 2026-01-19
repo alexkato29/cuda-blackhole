@@ -72,9 +72,7 @@ __global__ void blackhole(
 	if (hit_event_horizon) {
 		color = BLACK;
 	} else {
-		float3 dir = normalize(ray.velocity);
-
-		float2 uv = uv_mapping(dir);
+		float2 uv = uv_mapping(ray.velocity);
 		int px = (int)(uv.x * input_width);
 		int py = (int)(uv.y * input_height);
 
@@ -98,11 +96,13 @@ void raytrace_blackhole(
 	int output_height,
 	int channels,
 	float fov_degrees,
-	float schwarzchild_radius
+	float schwarzchild_radius,
+	float3 blackhole_position,
+	int num_iterations,
+	float step_size
 ) {
-	// Make sure the camera is not inside of the blackhole
+	// It just makes it simple to keep this at the origin.
 	float3 camera_position = make_float3(0.0f, 0.0f, 0.0f);
-	float3 blackhole_position = make_float3(0.0f, 20.0f, 10.0f);
 
 	float3 camera_front = normalize(blackhole_position - camera_position);
 	float3 camera_left = normalize(cross(make_float3(0.0f, 0.0f, 1.0f), camera_front));
@@ -116,10 +116,6 @@ void raytrace_blackhole(
 	printf("Left: %f, %f, %f\n", camera_left.x, camera_left.y, camera_left.z);
 	printf("Up: %f, %f, %f\n", camera_up.x, camera_up.y, camera_up.z);
 	printf("Tan FoV: %f\n", tan_fov);
-
-	// For now, these are just arbitrary
-	int num_iterations = 100000;
-	float step_size = 0.01f;
 
 	dim3 threads(16, 16);
 	dim3 blocks((output_width + threads.x - 1) / threads.x, (output_height + threads.y - 1) / threads.y);

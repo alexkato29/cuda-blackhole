@@ -9,5 +9,8 @@ void raytrace_blackhole(
     int output_height,
     int channels,
     float fov_degrees,
-    float schwarzchild_radius
+    float schwarzchild_radius,
+    float3 blackhole_position,
+    int num_iterations,
+    float step_size
 );
