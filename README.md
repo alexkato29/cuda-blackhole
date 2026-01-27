@@ -1,8 +1,19 @@
 # Parallel Black Hole Rendering with CUDA
 ![Black Hole](assets/blackhole.jpg)
+*Background image courtesy of [Greg Zaal](https://polyhaven.com/a/rogland_clear_night)*
 
 ## Engulf Anything
 Render a [Schwarzchild black hole](https://en.wikipedia.org/wiki/Schwarzschild_metric) onto any equirectangular image in real-time. Rendering respects physics using numerical integration of geodesic equations and raytracing.
+
+## How to Use It
+1. Download any equirectangular image.
+2. Point to the downloaded image path in `config.txt`.
+3. Build and run the executable.
+```
+make clean && make
+./blackhole config.txt
+```
+4. See your rendered image at the output path.
 
 ## How it Works
 1. A camera and black hole are simulated in a scene.
@@ -12,6 +23,9 @@ Render a [Schwarzchild black hole](https://en.wikipedia.org/wiki/Schwarzschild_m
 
 ## Performance Benchmark
 ```
-T4 GPU 1080p: 300ms
+T4 GPU (5000 Ray Marches)
+-------------------------
+1080p: 570ms
+4k:    2130ms
 ```
 

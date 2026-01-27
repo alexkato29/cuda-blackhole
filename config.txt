@@ -3,17 +3,17 @@ output_width=3840
 output_height=2160
 
 # Camera Settings
-fov_degrees=60.0
+fov_degrees=70.0
 
 # Black Hole Parameters
 schwarzchild_radius=1.0
-blackhole_x=0.0
-blackhole_y=20.0
-blackhole_z=10.0
+blackhole_x=3.0
+blackhole_y=24.0
+blackhole_z=60.0
 
 # Raytracing Parameters
-num_iterations=100000
-step_size=0.01
+num_iterations=5000
+step_size=0.04
 
 # IO Paths
 input_path=images/sky.jpg
