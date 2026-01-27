@@ -73,8 +73,8 @@ __global__ void blackhole(
 		}
 
 		if (new_radius > 1000.0f) break;
-		// No need to keep going if we're out of the gravity well
-		if (dot(old_velocity, ray.velocity) == 1.0f && new_radius > old_radius) break;
+		// TODO: figure out why this early stopping condition makes rendering look off
+		// if (dot(old_velocity, ray.velocity) == 1.0f && new_radius > old_radius) break;
 	}
 
 	float3 color;
