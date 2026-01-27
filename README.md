@@ -1,4 +1,4 @@
-# cuda-blackhole
+# Parallel Black Hole Rendering with CUDA
 ![Black Hole](assets/blackhole.jpg)
 
 ## Engulf Anything
