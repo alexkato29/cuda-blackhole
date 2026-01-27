@@ -60,6 +60,7 @@ __global__ void blackhole(
 
 	for (int n = 0; n < num_iterations; n++) {
 		float old_radius = length(ray.position - blackhole_position);
+		float3 old_velocity = ray.velocity;
 		// For now we simulate the light rays rather than using the field equations.
 		// It's a simplified and (much faster) approach. But ultimately, if I have time
 		// to properly learn GR I think it'd be great to actually use Einstein's Field Equations.
@@ -72,6 +73,8 @@ __global__ void blackhole(
 		}
 
 		if (new_radius > 1000.0f) break;
+		// No need to keep going if we're out of the gravity well
+		if (dot(old_velocity, ray.velocity) == 1.0f && new_radius > old_radius) break;
 	}
 
 	float3 color;
@@ -126,6 +129,11 @@ void raytrace_blackhole(
 	dim3 threads(16, 16);
 	dim3 blocks((output_width + threads.x - 1) / threads.x, (output_height + threads.y - 1) / threads.y);
 
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+
+	cudaEventRecord(start);
 	blackhole<<<blocks, threads>>>(
 		d_input,
 		input_width,
@@ -144,6 +152,15 @@ void raytrace_blackhole(
 		blackhole_position,
 		schwarzchild_radius
 	);
-	cudaDeviceSynchronize();
+	cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    float ms = 0.0f;
+    cudaEventElapsedTime(&ms, start, stop);
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
+    printf("Kernel Time: %f ms\n", ms);
 }
 

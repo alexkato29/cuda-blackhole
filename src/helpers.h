@@ -101,7 +101,7 @@ __device__ inline RayState rk4_step(RayState state, float h2, float step_size, f
 
     RayState next_state;
     next_state.position = state.position + (k1.position + k2.position * 2.0f + k3.position * 2.0f + k4.position) * (step_size / 6.0f);
-    next_state.velocity = state.velocity + (k1.velocity + k2.velocity * 2.0f + k3.velocity * 2.0f + k4.velocity) * (step_size / 6.0f);
+    next_state.velocity = normalize(state.velocity + (k1.velocity + k2.velocity * 2.0f + k3.velocity * 2.0f + k4.velocity) * (step_size / 6.0f));
 
     return next_state;
 }
