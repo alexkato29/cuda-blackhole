@@ -10,7 +10,7 @@ Render a [Schwarzchild black hole](https://en.wikipedia.org/wiki/Schwarzschild_m
 2. Point to the downloaded image path in `config.txt`.
 3. Build and run the executable.
 ```
-make clean && make
+make setup && make
 ./blackhole config.txt
 ```
 4. See your rendered image at the output path.
@@ -22,10 +22,17 @@ make clean && make
 4. As light rays leave the warped region of spacetime and settle, they travel to infinity and point sample from an infinitely-far equirectangular image.
 
 ## Performance Benchmark
-```
-T4 GPU (5000 Ray Marches)
--------------------------
-1080p: 570ms
-4k:    2130ms
-```
+This is the actual runtime to generate the same image you see in the readme. Averaged over 100 iterations.
 
+| Resolution | Kernel Runtime (ms) |  FPS |
+| ---------- | ------------------- | ---- |
+| 1080p      |               13.38 | 74.7 |
+| 4K         |               55.94 | 17.9 |
+
+The following parameters were used for the test.
+
+| Param | Value |
+|-------|-------|
+| GPU   | NVIDIA L4 |
+| Iterations| 1000 |
+| Step Size  |  0.1 $r_s$ |

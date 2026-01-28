@@ -12,8 +12,8 @@ blackhole_y=24.0
 blackhole_z=60.0
 
 # Raytracing Parameters
-num_iterations=5000
-step_size=0.04
+num_iterations=1000
+step_size=0.1
 
 # IO Paths
 input_path=images/sky.jpg
