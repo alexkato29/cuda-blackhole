@@ -49,6 +49,11 @@ __global__ void blackhole(
 	float3 ray_direction = camera_front - camera_left * screen_x - camera_up * screen_y;
 	ray_direction = normalize(ray_direction);
 
+	// To save time, we will say that if you're already as far as the camera you are good.
+	// When the camera starts deep in the gravity well, visuals are already very odd since
+	// every geodesic is massively warped, so you should be backed up anyway.
+	float early_stop_radius = length_squared(camera_position - blackhole_position);
+
 	RayState ray;
 	ray.position = camera_position;
 	ray.velocity = ray_direction;
@@ -58,21 +63,20 @@ __global__ void blackhole(
 	float3 angular_momentum = cross(ray.position - blackhole_position, ray.velocity);
 	float h2 = length_squared(angular_momentum);
 
-	for (int n = 0; n < num_iterations; n++) {
-		float old_radius = length(ray.position - blackhole_position);
-		float3 old_velocity = ray.velocity;
+	for (int n = 0; n < num_iterations; n++) {		
+		float old_radius = length_squared(ray.position - blackhole_position);
 		// For now we simulate the light rays rather than using the field equations.
 		// It's a simplified and (much faster) approach. But ultimately, if I have time
 		// to properly learn GR I think it'd be great to actually use Einstein's Field Equations.
-		ray =  rk4_step(ray, h2, step_size, blackhole_position);
-		float new_radius = length(ray.position - blackhole_position);
+		ray =  rk2_step_midpoint(ray, h2, step_size, blackhole_position);
+		float new_radius = length_squared(ray.position - blackhole_position);
 
 		if (new_radius < schwarzchild_radius && old_radius >= schwarzchild_radius) {
 			hit_event_horizon = true;
 			break;
 		}
 
-		if (new_radius > 1000.0f) break;
+		if (new_radius > early_stop_radius) break;
 		// TODO: figure out why this early stopping condition makes rendering look off
 		// if (dot(old_velocity, ray.velocity) == 1.0f && new_radius > old_radius) break;
 	}

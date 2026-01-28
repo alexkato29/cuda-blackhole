@@ -46,7 +46,7 @@ __device__ inline float length_squared(float3 v) {
 }
 
 __host__ __device__ inline float3 normalize(float3 v) {
-    // This is technically less precise than 1.0f/magnitude, so keep that in mind
+    // This is technically less precise than 1.0f/magnitude
     return v * rsqrtf(dot(v, v));
 }
 
@@ -56,6 +56,8 @@ __device__ inline float2 uv_mapping(float3 velocity) {
     // https://en.wikipedia.org/wiki/List_of_common_coordinate_transformations?ref=drakeor.com#From_spherical_coordinates
     float3 dir = normalize(velocity);
 
+    // For performance, these technically run on the SFU. But, they are run so
+    // infrequently (once per thread) that it doesn't even move the needle to optimize.
     // Note: atan2 is not arctan^2. It's a distinct function.
     float phi = atan2f(dir.y, dir.x);
     float theta = acosf(dir.z);
@@ -69,11 +71,16 @@ __device__ inline float2 uv_mapping(float3 velocity) {
 __device__ inline float3 compute_acceleration(float3 position, float h2, float3 blackhole_position) {
     float3 relative_position = position - blackhole_position;
     float r2 = length_squared(relative_position);
-    float r5 = r2 * r2 * sqrtf(r2);
 
-    if (r5 < 1e-10f) return make_float3(0, 0, 0);
+    if (r2 < 1e-20f) return make_float3(0, 0, 0);
 
-    return relative_position * (-1.5f * h2 / r5);
+    // I initially had this written with a sqrt and division. Switching 
+    // to rsqrtf decreased the average runtime by nearly 25%!! 
+    float inv_r = rsqrtf(r2);
+    float inv_r2 = inv_r * inv_r;
+    float inv_r5 = inv_r2 * inv_r2 * inv_r;
+
+    return relative_position * (-1.5f * h2 * inv_r5);
 }
 
 __device__ inline RayState compute_derivative(RayState state, float h2, float3 blackhole_position) {
@@ -102,6 +109,29 @@ __device__ inline RayState rk4_step(RayState state, float h2, float step_size, f
     RayState next_state;
     next_state.position = state.position + (k1.position + k2.position * 2.0f + k3.position * 2.0f + k4.position) * (step_size / 6.0f);
     next_state.velocity = normalize(state.velocity + (k1.velocity + k2.velocity * 2.0f + k3.velocity * 2.0f + k4.velocity) * (step_size / 6.0f));
+
+    return next_state;
+}
+
+__device__ __forceinline__ RayState rk2_step_midpoint(
+    RayState state,
+    float h2,
+    float step_size,
+    float3 blackhole_position
+) {
+    RayState k1 = compute_derivative(state, h2, blackhole_position);
+
+    RayState mid;
+    mid.position = state.position + k1.position * (0.5f * step_size);
+    mid.velocity = state.velocity + k1.velocity * (0.5f * step_size);
+
+    RayState k2 = compute_derivative(mid, h2, blackhole_position);
+
+    RayState next_state;
+    next_state.position = state.position + k2.position * step_size;
+    // In practice, this normalize does add about 10% additional runtime.
+    // But without it, the image looked noticeably different.
+    next_state.velocity = normalize(state.velocity + k2.velocity * step_size);
 
     return next_state;
 }
