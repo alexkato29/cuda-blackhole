@@ -36,4 +36,5 @@ The following parameters were used for the test.
 | GPU   | NVIDIA L4 |
 | Steps| 1000 |
 | Step Size  |  0.1 $r_s$ |
+
 *Note: $r_s$ is the Schwarzchild radius of the blackhole*
