@@ -22,7 +22,7 @@ make setup && make
 4. As light rays leave the warped region of spacetime and settle, they travel to infinity and point sample from an infinitely-far equirectangular image.
 
 ## Performance Benchmark
-This is the actual runtime to generate the same image you see in the readme. Averaged over 100 iterations.
+This is the actual runtime to generate the same image you see in the readme. Averaged over 100 renders.
 
 | Resolution | Kernel Runtime (ms) |  FPS |
 | ---------- | ------------------- | ---- |
@@ -34,5 +34,6 @@ The following parameters were used for the test.
 | Param | Value |
 |-------|-------|
 | GPU   | NVIDIA L4 |
-| Iterations| 1000 |
+| Steps| 1000 |
 | Step Size  |  0.1 $r_s$ |
+*Note: $r_s$ is the Schwarzchild radius of the blackhole*
