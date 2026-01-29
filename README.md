@@ -18,7 +18,7 @@ make setup && make
 ## How it Works
 1. A camera and black hole are simulated in a scene.
 2. Each GPU thread shoots a light ray out into space.
-3. As the light rays travel near the black hole, they "accelerate" and follow geodesic paths through the warped spacetime. This is simulated from the geodesic equations using numerical integration (Runge-Kutta methods).
+3. As the light rays travel near the black hole, they "accelerate" and follow geodesics through warped spacetime. This is simulated from the geodesic equations using numerical integration (Runge-Kutta methods).
 4. As light rays leave the warped region of spacetime and settle, they travel to infinity and point sample from an infinitely-far equirectangular image.
 
 ## Performance Benchmark
@@ -37,4 +37,4 @@ The following parameters were used for the test.
 | Steps| 1000 |
 | Step Size  |  0.1 $r_s$ |
 
-*Note: $r_s$ is the Schwarzchild radius of the blackhole*
+*Note: $r_s$ is the Schwarzchild radius of the black hole*
